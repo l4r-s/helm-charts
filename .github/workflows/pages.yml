@@ -1,0 +1,35 @@
+name: Helm Package and Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  package-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v1
+
+    - name: Package Helm charts
+      run: |
+        rm -rf publish
+        mkdir -p publish && cd publish
+        for dir in $(ls -d ../*/); do
+          if [ "$dir" == "../publish/" ]; then
+            continue
+          fi
+          helm package $dir
+        done
+        helm repo index --url https://l4r-s.github.io/helm-charts .
+
+    - name: Publish to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./publish

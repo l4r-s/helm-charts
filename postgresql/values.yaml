@@ -1,0 +1,19 @@
+secret_name: postgres-secret
+db_name: postgres
+storage_size: 1Gi
+image: postgres:latest
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 800m
+    memory: 800Mi
+
+enable_backup: false
+backup_schedule: "40 0 * * *"
+keepBackups: 31
+nextcloud:
+  url: https://nextcloud.example.com
+  dest_dir: backup-dir-on-nextcloud

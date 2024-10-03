@@ -1,0 +1,92 @@
+{{- if .Values.enable_backup }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-backup
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "{{ .Values.backup_schedule }}"
+  successfulJobsHistoryLimit: 0
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup-container
+            image: {{ .Values.image }}
+            command: ["/bin/sh"]
+            args:
+              - "-c"
+              - |
+                # install curl
+                apt update && apt install -y curl
+
+                # Create PostgreSQL backup
+                PGPASSWORD="${DB_PASSWORD}" pg_dump -h ${DB_HOST} -U ${DB_USER} ${DB_NAME} > /backup/backup.sql
+                tar czf /backup/backup.tar.gz -C /backup backup.sql
+
+                # Upload backup to Nextcloud via WebDAV
+                curl -T /backup/backup.tar.gz \
+                  --user "${NEXTCLOUD_USER}:${NEXTCLOUD_PASSWORD}" \
+                  {{ .Values.nextcloud.url }}/remote.php/dav/files/${NEXTCLOUD_USER}/{{ .Values.nextcloud.dest_dir }}/{{ .Release.Name }}-$(date +%F-%H%M).tar.gz
+
+                # Remove all but the last {{ .Values.keepBackups }} backups from Nextcloud
+                curl -s -u "${NEXTCLOUD_USER}:${NEXTCLOUD_PASSWORD}" \
+                  -X PROPFIND \
+                  -H "Depth: 1" \
+                  {{ .Values.nextcloud.url }}/remote.php/dav/files/${NEXTCLOUD_USER}/{{ .Values.nextcloud.dest_dir }}/ | \
+                  grep -oP '(?<=<d:href>).*?(?=</d:href>)' | \
+                  grep -E '\.tar\.gz$' | \
+                  sort -r | \
+                  tail -n +{{ add .Values.keepBackups 1 }} | \
+                  while read -r file; do
+                    curl -s -u "${NEXTCLOUD_USER}:${NEXTCLOUD_PASSWORD}" \
+                      -X DELETE \
+                      {{ .Values.nextcloud.url }}"$file"
+                  done
+
+            env:
+            - name: NEXTCLOUD_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-credentials
+                  key: username
+            - name: NEXTCLOUD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-credentials
+                  key: password
+            - name: DB_NAME
+              value: {{ .Values.db_name }}
+            - name: DB_HOST
+              value: postgres
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret_name }}
+                  key: postgres-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret_name }}
+                  key: postgres-password
+            volumeMounts:
+            {{- range $index, $file := .Values.files }}
+            - name: volume-{{ $index }}
+              mountPath: {{ $file }}
+              readOnly: true
+            {{- end }}
+            - name: backup-volume
+              mountPath: /backup
+          volumes:
+          {{- range $index, $file := .Values.files }}
+          - name: volume-{{ $index }}
+            hostPath:
+              path: {{ $file }}
+              type: File
+          {{- end }}
+          - name: backup-volume
+            emptyDir: {}
+          
+          restartPolicy: OnFailure
+{{- end }}
