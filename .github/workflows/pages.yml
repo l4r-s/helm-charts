@@ -5,6 +5,10 @@ on:
     branches:
       - main  # Specify the branch that triggers the workflow
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
