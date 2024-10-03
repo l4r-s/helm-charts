@@ -34,7 +34,8 @@ jobs:
             fi
             helm package $dir
           done
-          helm repo index --url https://l4r-s.github.io/helm-charts .
+          helm repo index --url https://l4r-s.github.io/helm-charts/ .
+          cp ../README.md .
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
