@@ -1,16 +1,16 @@
-name: Helm Package and Publish
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main
+      - main  # Specify the branch that triggers the workflow
 
 jobs:
-  package-and-publish:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout the repository
       uses: actions/checkout@v3
 
     - name: Set up Helm
@@ -28,14 +28,7 @@ jobs:
         done
         helm repo index --url https://l4r-s.github.io/helm-charts .
 
-    - name: Publish to GitHub Pages
+    - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v1
       with:
-        token: ${{ secrets.PAGES_GITHUB_TOKEN }}
-        branch: gh-pages
-        clean: true
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: helm-charts
-        path: ./publish
+        token: ${{ secrets.GITHUB_TOKEN }}
