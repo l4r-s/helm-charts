@@ -2,6 +2,7 @@ secret_name: postgres-secret
 db_name: postgres
 storage_size: 1Gi
 image: postgres:latest
+service_name: postgres
 
 resources:
   requests:
