@@ -1,0 +1,20 @@
+apiVersion: v1
+entries:
+  postgresql:
+  - apiVersion: v2
+    created: "2025-04-14T19:51:55.970182+02:00"
+    description: A Helm chart to deploy postgresql
+    digest: 6897bf19ed8f96bac84df1a98782200111d923a4446dc7a815d5e6140035e940
+    name: postgresql
+    urls:
+    - https://l4r-s.github.io/helm-charts/postgresql-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    created: "2025-04-14T19:51:55.970066+02:00"
+    description: A Helm chart to deploy postgresql
+    digest: 3e3104b7ace2a728e9c784fcc5a120c52c97554feec27386626471fafb8f200e
+    name: postgresql
+    urls:
+    - https://l4r-s.github.io/helm-charts/postgresql-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-04-14T19:51:55.969548+02:00"

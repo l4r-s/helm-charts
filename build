@@ -1,0 +1,14 @@
+#!/bin/bash
+
+mkdir -p publish && cd publish/
+for dir in $(ls -d ../*/); do
+  if [ "$dir" == "../publish/" ]; then
+    continue
+  fi
+  helm package $dir
+done
+helm repo index --url https://l4r-s.github.io/helm-charts/ .
+cp ../README.md .
+
+echo "Build completed successfully"
+echo "You can now push the changes to the repository"
